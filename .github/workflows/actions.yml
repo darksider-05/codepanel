@@ -90,7 +90,7 @@ jobs:
           sdk: stable
       - run: dart pub get
       - run: mkdir build\windows
-      - run: dart compile exe lib/main.dart -o build/windows/CodePanel-windows.exe
+      - run: dart compile exe lib/main.dart -o build/windows/CodePanel-windows.exe --win-icon=assets/icon.ico
       - run: dir build\windows
       - uses: actions/upload-artifact@v4
         with:
