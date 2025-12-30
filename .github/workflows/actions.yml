@@ -42,24 +42,28 @@ jobs:
       # 🗂 Prepare AppDir
       - name: Prepare AppDir
         run: |
-          mkdir -p AppDir/usr/lib
-
-          # Copy libary
-          cp build/linux/CodePanel AppDir/usr/lib/CodePanel
+          mkdir -p AppDir/usr/bin
+          cp build/linux/CodePanel AppDir/usr/bin/CodePanel
 
           # AppRun launcher
           cat > AppDir/AppRun << 'EOF'
-          #!/lib/bash
+          #!/bin/bash
           HERE="$(dirname "$(readlink -f "$0")")"
-          exec "$HERE/usr/lib/CodePanel" "$@"
+          exec "$HERE/usr/bin/CodePanel" "$@"
           EOF
           chmod +x AppDir/AppRun
 
+          # Copy icon
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+          cp assets/icon.png AppDir/usr/share/icons/hicolor/256x256/apps/codepanel.png
+          cp assets/icon.png AppDir/codepanel.png
+
           # Desktop entry
-          cat > AppDir/CodePanel.desktop <<EOF
+          cat > AppDir/codepanel.desktop <<EOF
           [Desktop Entry]
           Name=CodePanel
           Exec=CodePanel
+          Icon=codepanel
           Type=Application
           Categories=Utility;
           Terminal=true
