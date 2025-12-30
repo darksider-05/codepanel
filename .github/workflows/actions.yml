@@ -1,0 +1,110 @@
+name: Build CodePanel CLI for All Platforms
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Get dependencies
+        run: dart pub get
+
+      - name: Build Linux executable
+        run: |
+          mkdir -p build/linux
+          dart compile exe bin/main.dart -o build/linux/CodePanel
+          chmod +x build/linux/CodePanel
+
+      # 🧱 Install AppImage tooling
+      - name: Install AppImage dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y patchelf
+
+      # 📦 Download appimagetool (no FUSE)
+      - name: Download and extract AppImage tool
+        run: |
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          ./appimagetool-x86_64.AppImage --appimage-extract
+          mv squashfs-root appimagetool-extracted
+
+      # 🗂 Prepare AppDir
+      - name: Prepare AppDir
+        run: |
+          mkdir -p AppDir/usr/bin
+
+          # Copy binary
+          cp build/linux/CodePanel AppDir/usr/bin/CodePanel
+
+          # AppRun launcher
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/CodePanel" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+
+          # Desktop entry
+          cat > AppDir/CodePanel.desktop <<EOF
+          [Desktop Entry]
+          Name=CodePanel
+          Exec=CodePanel
+          Type=Application
+          Categories=Utility;
+          Terminal=true
+          EOF
+
+      # 🚀 Build AppImage
+      - name: Build AppImage
+        run: |
+          ./appimagetool-extracted/AppRun AppDir CodePanel-x86_64.AppImage
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodePanel-Linux-AppImage
+          path: CodePanel-x86_64.AppImage
+
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+      - run: mkdir build\windows
+      - run: dart compile exe bin/main.dart -o build/windows/CodePanel-windows.exe
+      - run: dir build\windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CodePanel-windows
+          path: build/windows/CodePanel-windows.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+      - run: mkdir -p build/macos
+      - run: dart compile exe bin/main.dart -o build/macos/CodePanel-macos
+      - run: ls -l build/macos
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CodePanel-macos
+          path: build/macos/CodePanel-macos
