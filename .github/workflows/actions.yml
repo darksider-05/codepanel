@@ -22,7 +22,7 @@ jobs:
       - name: Build Linux executable
         run: |
           mkdir -p build/linux
-          dart compile exe bin/main.dart -o build/linux/CodePanel
+          dart compile exe lib/main.dart -o build/linux/CodePanel
           chmod +x build/linux/CodePanel
 
       # 🧱 Install AppImage tooling
@@ -42,16 +42,16 @@ jobs:
       # 🗂 Prepare AppDir
       - name: Prepare AppDir
         run: |
-          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/lib
 
-          # Copy binary
-          cp build/linux/CodePanel AppDir/usr/bin/CodePanel
+          # Copy libary
+          cp build/linux/CodePanel AppDir/usr/lib/CodePanel
 
           # AppRun launcher
           cat > AppDir/AppRun << 'EOF'
-          #!/bin/bash
+          #!/lib/bash
           HERE="$(dirname "$(readlink -f "$0")")"
-          exec "$HERE/usr/bin/CodePanel" "$@"
+          exec "$HERE/usr/lib/CodePanel" "$@"
           EOF
           chmod +x AppDir/AppRun
 
@@ -86,7 +86,7 @@ jobs:
           sdk: stable
       - run: dart pub get
       - run: mkdir build\windows
-      - run: dart compile exe bin/main.dart -o build/windows/CodePanel-windows.exe
+      - run: dart compile exe lib/main.dart -o build/windows/CodePanel-windows.exe
       - run: dir build\windows
       - uses: actions/upload-artifact@v4
         with:
@@ -102,7 +102,7 @@ jobs:
           sdk: stable
       - run: dart pub get
       - run: mkdir -p build/macos
-      - run: dart compile exe bin/main.dart -o build/macos/CodePanel-macos
+      - run: dart compile exe lib/main.dart -o build/macos/CodePanel-macos
       - run: ls -l build/macos
       - uses: actions/upload-artifact@v4
         with:
