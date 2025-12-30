@@ -85,12 +85,23 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install rcedit
+        run: choco install rcedit
+
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+
       - run: dart pub get
+
       - run: mkdir build\windows
-      - run: dart compile exe lib/main.dart -o build/windows/CodePanel-windows.exe --win-icon=assets/icon.ico
+
+      - run: dart compile exe lib/main.dart -o build/windows/CodePanel-windows.exe
+
+      - name: Set Windows executable icon
+        run: rcedit build\windows\CodePanel-windows.exe --set-icon assets\icon.ico
+
       - run: dir build\windows
       - uses: actions/upload-artifact@v4
         with:
